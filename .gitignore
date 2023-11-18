@@ -12,9 +12,6 @@
 /bin/
 /vendor/
 
-# Archivos de dependencias
-go.sum
-
 # Binarios de Go
 *.test
 *.prof
