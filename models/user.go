@@ -5,5 +5,5 @@ type User struct {
 	Contrasena  string `json:"contrasena"`
 }
 
-type User []users
+type users []User
 

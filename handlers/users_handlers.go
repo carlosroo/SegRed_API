@@ -3,20 +3,20 @@ package handlers
 import (
     "fmt"
     "net/http"
-    "log"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"../models"
+	"SEGRED_API/models"
+
 )
 
 const version = 0
 const bbdd = "data"
 
-func createUser (w http.ResponseWriter, r *http.Request) { //solicita un json y crea una carpetilla
-	var newUser models.User
+func CreateUser (w http.ResponseWriter, r *http.Request) { //solicita un json y crea una carpetilla
+	var newUser User
 	var ruta string
 	var name string
 
@@ -50,12 +50,12 @@ func createUser (w http.ResponseWriter, r *http.Request) { //solicita un json y 
 	}
 }
 
-func getVersion(w http.ResponseWriter, r *http.Request) { //manda un json
+func GetVersion(w http.ResponseWriter, r *http.Request) { //manda un json
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(version)
 }
 
-func indexRoute(w http.ResponseWriter, r *http.Request){
+func IndexRoute(w http.ResponseWriter, r *http.Request){
 	// w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "Bienvenido lokete")
 }
