@@ -16,7 +16,7 @@ const version = 0
 const bbdd = "data"
 
 func CreateUser (w http.ResponseWriter, r *http.Request) { //solicita un json y crea una carpetilla
-	var newUser User
+	var newUser models.User
 	var ruta string
 	var name string
 
