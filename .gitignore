@@ -1,0 +1,22 @@
+# Archivos ejecutables
+*.exe
+*.out
+
+# Archivos de configuración
+*.env
+
+# Archivos de logs
+*.log
+
+# Directorios generados
+/bin/
+/vendor/
+
+# Archivos de dependencias
+go.sum
+
+# Binarios de Go
+*.test
+*.prof
+*.cover
+/build/
