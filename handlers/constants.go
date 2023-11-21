@@ -8,7 +8,7 @@ const (
 	secret_key = "secret_key"
 	token_expiration_time = 5
 	bbdd = "usuarios.db"
-	tokenErroneo = "XXXXXXXXXXXX"
+	tokenErroneo = "Noppers"
 	
 )
 var jwtKey = []byte(secret_key)
