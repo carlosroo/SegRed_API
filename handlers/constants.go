@@ -9,6 +9,7 @@ const (
 	token_expiration_time = 5
 	bbdd = "usuarios.db"
 	tokenErroneo = "XXXXXXXXXXXX"
+	
 )
-
+var jwtKey = []byte(secret_key)
 var usersDB models.UsersDB

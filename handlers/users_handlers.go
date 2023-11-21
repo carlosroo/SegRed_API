@@ -73,8 +73,7 @@ func identifyUser (user models.User) (string, error) {
 }
 
 func generateToken (name string) (string, error){
-	var jwtKey = []byte(secret_key)
-	expirationTime := time.Now().Add(time.Minute *5)
+	expirationTime := time.Now().Add(time.Minute *token_expiration_time)
 
 	claims := &models.Claims{
 		Username: name,
@@ -130,7 +129,12 @@ func CreateUser (w http.ResponseWriter, r *http.Request) {
     }
 
 	//Genero el token de usuario
-	/*not implemented */
+	token, err := generateToken(newUser.Name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+        fmt.Fprintf(w, "Error en la generacion del token de usuario\n Error: %v", err)
+		return
+	}
 
 	//Creo un nuevo directorio para el usuario
 	err = newDirectory(newUser.Name)
@@ -138,9 +142,11 @@ func CreateUser (w http.ResponseWriter, r *http.Request) {
 	if err!= nil {
 		w.WriteHeader(http.StatusBadRequest)
         fmt.Fprintf(w, "Error en la creacion del directorio\n Error: %v", err)
+		return
     } else {
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, "Creado nuevo directorio de usuario: %v\n", newUser.Name)
+		fmt.Fprintf(w, "{access_token: %v}\n", token)
+		return
 	}
 }
 // Crea el directorio con un nombre del nuevo usuario
