@@ -32,28 +32,27 @@ func NuevoUsuario(username, password string) models.User {
 	}
 }
 
-func CargarUsuarios(db *models.UsersDB) error{
+func CargarUsuarios() error{
 	usuariosCifrados, err := ioutil.ReadFile("./usuarios.db")
 	if err != nil {
 		return err
 	}
 
-	return json.Unmarshal(usuariosCifrados, &db.Users)
+	return json.Unmarshal(usuariosCifrados, &usersDB.Users)
 }
 
-func AgregarUsuario(db *models.UsersDB, nombre, contraseña string) error {
+func AddUser(nombre, contraseña string) error {
 	// Verifica si el usuario ya existe
-	for _, usuario := range db.Users {
+	for _, usuario := range usersDB.Users {
 		if usuario.Name == nombre {
 			return fmt.Errorf("el usuario %s ya existe", nombre)
 		}
 	}
 	newUser := NuevoUsuario(nombre, cifrarContraseña(contraseña))
-	//hash de la contraseña
 
-	db.Users = append(db.Users, newUser)
+	usersDB.Users = append(usersDB.Users, newUser)
 	
-	if err:= GuardarUsuarios(db); err != nil {
+	if err:= GuardarUsuarios(&usersDB); err != nil {
 		return err
 	}
 

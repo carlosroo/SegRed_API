@@ -6,7 +6,7 @@ const (
 	version = 0
 	bbdd = "data"
 	secret_key = "secret_key"
-	token_expiration = 5
+	token_expiration_time = 5
 )
 
-var UsersDB models.UsersDB
+var usersDB models.UsersDB

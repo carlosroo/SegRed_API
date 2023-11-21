@@ -17,3 +17,6 @@
 *.prof
 *.cover
 /build/
+
+#Carpeta de configuracion de vscode
+.vscode/
