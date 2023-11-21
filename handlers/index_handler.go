@@ -9,6 +9,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+//Implementa GET /version
 func GetVersion(w http.ResponseWriter, r *http.Request) { //manda un json
 
 	// cookie, err := r.Cookie("token")
@@ -48,11 +49,12 @@ func GetVersion(w http.ResponseWriter, r *http.Request) { //manda un json
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-		
+	/********************************************/
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(fmt.Sprintf("Hello, %s, version is %v", claims.Username, version)))
 }
 
+//Implementa GET /
 func IndexRoute(w http.ResponseWriter, r *http.Request){
 	// w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "Bienvenido lokete")

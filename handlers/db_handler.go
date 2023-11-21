@@ -10,12 +10,12 @@ import (
 
 	"SEGRED_API/models"
 )
-
+//Crea y devuelve el hash de una cadena
 func cifrarContraseña(password string) string{
 	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(hash)
 }
-
+//Vuelca los usuarios en la base de datos
 func GuardarUsuarios(db *models.UsersDB) error {
 	usuariosCifrados, err := json.Marshal(db.Users)
 	if err != nil {
@@ -24,14 +24,14 @@ func GuardarUsuarios(db *models.UsersDB) error {
 
 	return ioutil.WriteFile(bbdd, usuariosCifrados, 0644)
 }
-
+//Crea una nueva estructura User dados sus parametros
 func NuevoUsuario(username, password string) models.User {
 	return models.User{
 		Name: username,
 		Password: password,
 	}
 }
-
+//Carga los usuarios de la base de datos a usersDB.Users
 func CargarUsuarios() error{
 	fileContent, err := ioutil.ReadFile(bbdd)
 	if err != nil {
@@ -41,6 +41,7 @@ func CargarUsuarios() error{
 	return json.Unmarshal(fileContent, &usersDB.Users)
 }
 
+//Añade usuario a la base de datos
 func AddUser(nombre, contraseña string) error {
 	// Verifica si el usuario ya existe
 	for _, usuario := range usersDB.Users {
