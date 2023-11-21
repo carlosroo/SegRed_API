@@ -105,7 +105,7 @@ func verifyPassword(user *models.User, password string) error {
 	return err
 }
 
-
+//Metodo que implementa /signup
 func CreateUser (w http.ResponseWriter, r *http.Request) {
 	var newUser models.User
 	
@@ -165,8 +165,10 @@ func newDirectory(dir string) error {
 // Agrego el nuevo usuario a la base de datos
 func addUserdb (newUser models.User) error {
 	if  err := CargarUsuarios(); err != nil {
-		fmt.Println("Error al cargar la base de datos de usuarios:", err)
-		return err
+		return fmt.Errorf("Error al cargar la base de datos")
+	}
+	if newUser.Name == "" || newUser.Password == ""{
+		return fmt.Errorf("Usuario o contraseña vacío")
 	}
 	err1 := AddUser(newUser.Name, newUser.Password)
 	if err1 != nil {
