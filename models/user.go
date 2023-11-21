@@ -1,9 +1,10 @@
 package models
 
 type User struct {
-	Nombre      string `json:"nombre"`
-	Contrasena  string `json:"contrasena"`
+	Name      string `json:"name"`
+	Password  string `json:"password,omitempty"`
 }
 
-type users []User
-
+type UsersDB struct {
+	Users []User
+}
