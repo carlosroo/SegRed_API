@@ -22,7 +22,7 @@ func GuardarUsuarios(db *models.UsersDB) error {
 		return err
 	}
 
-	return ioutil.WriteFile("usuarios.db", usuariosCifrados, 0644)
+	return ioutil.WriteFile(bbdd, usuariosCifrados, 0644)
 }
 
 func NuevoUsuario(username, password string) models.User {
@@ -33,12 +33,12 @@ func NuevoUsuario(username, password string) models.User {
 }
 
 func CargarUsuarios() error{
-	usuariosCifrados, err := ioutil.ReadFile("./usuarios.db")
+	fileContent, err := ioutil.ReadFile(bbdd)
 	if err != nil {
 		return err
 	}
 
-	return json.Unmarshal(usuariosCifrados, &usersDB.Users)
+	return json.Unmarshal(fileContent, &usersDB.Users)
 }
 
 func AddUser(nombre, contraseña string) error {
