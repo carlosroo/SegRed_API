@@ -16,9 +16,10 @@ import (
 
 )
 
+//funcion que implementar /login
 func Login (w http.ResponseWriter, r *http.Request){
 	var user models.User
-	expirationTime := time.Now().Add(time.Minute *5)
+	//expirationTime := time.Now().Add(time.Minute *5)
 
 	reqBody,  err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -33,47 +34,48 @@ func Login (w http.ResponseWriter, r *http.Request){
         fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
         return
 	}
-	token, err := identifyUser(user);
+	err = identifyUser(&user);
 	if err != nil {
 		fmt.Fprintf(w, "Error en la autenticacion\n Error: %v", err)
 	}
-
-	http.SetCookie(w,
-		&http.Cookie{
-			Name:    "token",
-			Value:   token,
-			Expires: expirationTime,
-			HttpOnly: true,
-		})
+	token, err := generateToken(user.Name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error en la genenacion del token: %v", err)
+		return
+	}
+	//Inicio de sesion con cookie para no mandar el token en cada request
+	// http.SetCookie(w,
+	// 	&http.Cookie{
+	// 		Name:    "token",
+	// 		Value:   token,
+	// 		Expires: expirationTime,
+	// 		HttpOnly: true,
+	// 	})
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{"acces_token:" "%s"}`, token)
 }
 
-func identifyUser (user models.User) (string, error) {
+func identifyUser (user *models.User) (error) {
 
 	if  err := CargarUsuarios(); err != nil {
 		fmt.Println("Error al cargar la base de datos de usuarios:", err)
-		return tokenErroneo, err
+		return err
 	}
 	user_bbdd, err := searchUserByName(user.Name)
 	if err != nil {
-		return tokenErroneo, err
+		return err
 	}
 	if err := verifyPassword(user_bbdd, user.Password); err != nil {
-		return tokenErroneo, err
-	}
-	
-	tokenString, err := generateToken(user.Name)
-	if err != nil {
-		return tokenErroneo, err
+		return err
 	}
 
-	return tokenString, err
+	return nil
 }
 
 func generateToken (name string) (string, error){
-	expirationTime := time.Now().Add(time.Minute *token_expiration_time)
+	expirationTime := time.Now().Add(time.Minute*token_expiration_time)
 
 	claims := &models.Claims{
 		Username: name,
@@ -86,6 +88,7 @@ func generateToken (name string) (string, error){
 
 	return tokenString, err
 }
+
 
 //buscamos al usuario en la base de datos
 func searchUserByName(username string) (*models.User, error) {
