@@ -15,13 +15,42 @@ import (
 	"SEGRED_API/models"
 
 )
-/*
-*
-* Métodos que implementan /login
-*
-*/
+
+func Login (w http.ResponseWriter, r *http.Request){
+	var user models.User
+	expirationTime := time.Now().Add(time.Minute *5)
+
+	reqBody,  err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error en la peticion\n Error: %v", err)
+		return
+	}
+	//Decodifico el json
+	err = json.Unmarshal(reqBody, &user)
+	if err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
+        return
+	}
+	token, err := identifyUser(user);
+	if err != nil {
+		fmt.Fprintf(w, "Error en la autenticacion\n Error: %v", err)
+	}
+
+	http.SetCookie(w,
+		&http.Cookie{
+			Name:    "token",
+			Value:   token,
+			Expires: expirationTime,
+			HttpOnly: true,
+		})
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"acces_token:" "%s"}`, token)
+}
+
 func identifyUser (user models.User) (string, error) {
-	var jwtKey = []byte(secret_key)
 
 	if  err := CargarUsuarios(); err != nil {
 		fmt.Println("Error al cargar la base de datos de usuarios:", err)
@@ -34,17 +63,29 @@ func identifyUser (user models.User) (string, error) {
 	if err := verifyPassword(user_bbdd, user.Password); err != nil {
 		return tokenErroneo, err
 	}
+	
+	tokenString, err := generateToken(user.Name)
+	if err != nil {
+		return tokenErroneo, err
+	}
+
+	return tokenString, err
+}
+
+func generateToken (name string) (string, error){
+	var jwtKey = []byte(secret_key)
 	expirationTime := time.Now().Add(time.Minute *5)
 
 	claims := &models.Claims{
-		Username: user.Name,
+		Username: name,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString()
+	tokenString, err := token.SignedString(jwtKey)
 
+	return tokenString, err
 }
 
 //buscamos al usuario en la base de datos
@@ -62,11 +103,7 @@ func verifyPassword(user *models.User, password string) error {
 	return err
 }
 
-/*
-*
-* Métodos que implementan /signup
-*
-*/
+
 func CreateUser (w http.ResponseWriter, r *http.Request) {
 	var newUser models.User
 	

@@ -16,6 +16,7 @@ func main(){
 	router.HandleFunc("/", handlers.IndexRoute).Methods("GET")
 	router.HandleFunc("/version", handlers.GetVersion).Methods("GET")
 	router.HandleFunc("/signup", handlers.CreateUser).Methods("POST")
+	router.HandleFunc("/login", handlers.Login).Methods("POST")
 
 	log.Println("Servidor corriendo en el puerto 5000")
 	log.Fatal(http.ListenAndServe(":5000", router))
