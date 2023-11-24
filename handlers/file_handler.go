@@ -3,14 +3,19 @@ package handlers
 import (
 	"fmt"
     "net/http"
+	"path/filepath"
+	"io/ioutil"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 
 	"SEGRED_API/models"
+
 )
 
 // Implementa GET /<string:username>/<string:doc_id>
-func getFileContent(w http.ResponseWriter, r *http.Request){
+func GetFileContent(w http.ResponseWriter, r *http.Request){
 
 	err:= validateToken(r.Header.Get("Authorization"))
 	if err != nil{
@@ -18,8 +23,27 @@ func getFileContent(w http.ResponseWriter, r *http.Request){
 		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
 		return 
 	}
-	fmt.Fprintf(w, "Token validado con exito")
-	//Implementar funcionalidad GET, devolver el contenido de fichero user/doc_id
+
+	vars:= mux.Vars(r)
+	username:= vars["username"]
+
+	docID := vars["doc_id"]
+	if !strings.HasSuffix(docID, ".json") {
+		docID += ".json"
+	}
+
+	filePath := filepath.Join(".", dir_usuarios, username, docID)
+	fileContent, err := ioutil.ReadFile(filePath)
+
+	if err != nil{
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "Error al leer el archivo: %v", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(fileContent)
+
 }
 // Implementa PUT /<string:username>/<string:doc_id>
 func updateFileContent(w http.ResponseWriter, r *http.Request){

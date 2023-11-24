@@ -16,7 +16,7 @@ import (
 
 )
 
-//funcion que implementar /login
+//funcion que implementa /login
 func Login (w http.ResponseWriter, r *http.Request){
 	var user models.User
 	//expirationTime := time.Now().Add(time.Minute *5)
@@ -57,6 +57,7 @@ func Login (w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, `{"acces_token:" "%s"}`, token)
 }
 
+// verificar contraseña de usuario
 func identifyUser (user *models.User) (error) {
 
 	if  err := CargarUsuarios(); err != nil {
@@ -74,6 +75,7 @@ func identifyUser (user *models.User) (error) {
 	return nil
 }
 
+//genera y devuleve token de usuario
 func generateToken (name string) (string, error){
 	expirationTime := time.Now().Add(time.Minute*token_expiration_time)
 
@@ -89,7 +91,6 @@ func generateToken (name string) (string, error){
 	return tokenString, err
 }
 
-
 //buscamos al usuario en la base de datos
 func searchUserByName(username string) (*models.User, error) {
 	for _, usuario := range usersDB.Users {
@@ -99,6 +100,7 @@ func searchUserByName(username string) (*models.User, error) {
 	}
 	return nil, fmt.Errorf("Usuario no encontrado: %s", username)
 }
+
 //comparamos el hash de la contraseña recibida con el guaradado 
 func verifyPassword(user *models.User, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
@@ -152,6 +154,7 @@ func CreateUser (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 // Crea el directorio con un nombre del nuevo usuario
 func newDirectory(dir string) error {
 	ruta := filepath.Join(".", dir_usuarios, dir)
@@ -162,6 +165,7 @@ func newDirectory(dir string) error {
 		return nil
 	}
 }
+
 // Agrego el nuevo usuario a la base de datos
 func addUserdb (newUser models.User) error {
 	if  err := CargarUsuarios(); err != nil {
