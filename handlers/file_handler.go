@@ -2,30 +2,36 @@ package handlers
 
 import (
 	"fmt"
-    "net/http"
-	"path/filepath"
 	"io/ioutil"
+	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 
 	"SEGRED_API/models"
-
 )
 
-// Implementa GET /<string:username>/<string:doc_id>
-func GetFileContent(w http.ResponseWriter, r *http.Request){
-
-	err:= validateToken(r.Header.Get("Authorization"))
-	if err != nil{
+func handleToken(w http.ResponseWriter, r *http.Request) error {
+	err := validateToken(r.Header.Get("Authorization"))
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
-		return 
+		return err
+	}
+	return nil
+}
+
+// Implementa GET /<string:username>/<string:doc_id>
+func GetFileContent(w http.ResponseWriter, r *http.Request) {
+
+	if err := handleToken(w, r); err != nil {
+		return
 	}
 
-	vars:= mux.Vars(r)
-	username:= vars["username"]
+	vars := mux.Vars(r)
+	username := vars["username"]
 
 	docID := vars["doc_id"]
 	if !strings.HasSuffix(docID, ".json") {
@@ -35,7 +41,7 @@ func GetFileContent(w http.ResponseWriter, r *http.Request){
 	filePath := filepath.Join(".", dir_usuarios, username, docID)
 	fileContent, err := ioutil.ReadFile(filePath)
 
-	if err != nil{
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Error al leer el archivo: %v", err)
 		return
@@ -45,43 +51,47 @@ func GetFileContent(w http.ResponseWriter, r *http.Request){
 	w.Write(fileContent)
 
 }
+
 // Implementa PUT /<string:username>/<string:doc_id>
-func updateFileContent(w http.ResponseWriter, r *http.Request){
-	err:= validateToken(r.Header.Get("Authorization"))
-	if err != nil{
+func updateFileContent(w http.ResponseWriter, r *http.Request) {
+	err := validateToken(r.Header.Get("Authorization"))
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
-		return 
+		return
 	}
 	fmt.Fprintf(w, "Token validado con exito")
 }
+
 // Implementa DELETE /<string:username>/<string:doc_id>
-func deleteFile(w http.ResponseWriter, r *http.Request){
-	err:= validateToken(r.Header.Get("Authorization"))
-	if err != nil{
+func deleteFile(w http.ResponseWriter, r *http.Request) {
+	err := validateToken(r.Header.Get("Authorization"))
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
-		return 
+		return
 	}
 	fmt.Fprintf(w, "Token validado con exito")
 }
+
 // Implementa POST /<string:username>/<string:doc_id>
-func uploadFile(w http.ResponseWriter, r *http.Request){
-	err:= validateToken(r.Header.Get("Authorization"))
-	if err != nil{
+func uploadFile(w http.ResponseWriter, r *http.Request) {
+	err := validateToken(r.Header.Get("Authorization"))
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
-		return 
+		return
 	}
 	fmt.Fprintf(w, "Token validado con exito")
 }
+
 // Implementa GET /<string:username>/_all_docs
-func getAllFiles(w http.ResponseWriter, r *http.Request){
-	err:= validateToken(r.Header.Get("Authorization"))
-	if err != nil{
+func getAllFiles(w http.ResponseWriter, r *http.Request) {
+	err := validateToken(r.Header.Get("Authorization"))
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
-		return 
+		return
 	}
 	fmt.Fprintf(w, "Token validado con exito")
 }
@@ -98,7 +108,7 @@ func validateToken(authHeader string) error {
 	claims := &models.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(authHeader, claims,
-		func(t *jwt.Token) (interface{}, error){
+		func(t *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
 

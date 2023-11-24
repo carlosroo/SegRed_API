@@ -1,27 +1,26 @@
 package handlers
 
 import (
-    "fmt"
-    "net/http"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 
 	"SEGRED_API/models"
-
 )
 
 //funcion que implementa /login
-func Login (w http.ResponseWriter, r *http.Request){
+func Login(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	//expirationTime := time.Now().Add(time.Minute *5)
 
-	reqBody,  err := ioutil.ReadAll(r.Body)
+	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error en la peticion\n Error: %v", err)
@@ -30,13 +29,14 @@ func Login (w http.ResponseWriter, r *http.Request){
 	//Decodifico el json
 	err = json.Unmarshal(reqBody, &user)
 	if err != nil {
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
-        return
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
+		return
 	}
-	err = identifyUser(&user);
+	err = identifyUser(&user)
 	if err != nil {
 		fmt.Fprintf(w, "Error en la autenticacion\n Error: %v", err)
+		return
 	}
 	token, err := generateToken(user.Name)
 	if err != nil {
@@ -58,9 +58,9 @@ func Login (w http.ResponseWriter, r *http.Request){
 }
 
 // verificar contraseña de usuario
-func identifyUser (user *models.User) (error) {
+func identifyUser(user *models.User) error {
 
-	if  err := CargarUsuarios(); err != nil {
+	if err := CargarUsuarios(); err != nil {
 		fmt.Println("Error al cargar la base de datos de usuarios:", err)
 		return err
 	}
@@ -76,8 +76,8 @@ func identifyUser (user *models.User) (error) {
 }
 
 //genera y devuleve token de usuario
-func generateToken (name string) (string, error){
-	expirationTime := time.Now().Add(time.Minute*token_expiration_time)
+func generateToken(name string) (string, error) {
+	expirationTime := time.Now().Add(time.Minute * token_expiration_time)
 
 	claims := &models.Claims{
 		Username: name,
@@ -98,21 +98,21 @@ func searchUserByName(username string) (*models.User, error) {
 			return &usuario, nil
 		}
 	}
-	return nil, fmt.Errorf("Usuario no encontrado: %s", username)
+	return nil, fmt.Errorf("usuario no encontrado: %v", username)
 }
 
-//comparamos el hash de la contraseña recibida con el guaradado 
+//comparamos el hash de la contraseña recibida con el guaradado
 func verifyPassword(user *models.User, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	return err
 }
 
 //Metodo que implementa /signup
-func CreateUser (w http.ResponseWriter, r *http.Request) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser models.User
-	
+
 	//Leer la peticion
-	reqBody,  err := ioutil.ReadAll(r.Body)
+	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error en la peticion\n Error: %v", err)
@@ -121,34 +121,34 @@ func CreateUser (w http.ResponseWriter, r *http.Request) {
 	//Decodifico el json
 	err = json.Unmarshal(reqBody, &newUser)
 	if err != nil {
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
-        return
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
+		return
 	}
 	//Incluyo el nuevo usuario en la base de datos
 	err = addUserdb(newUser)
-	if err!= nil {
-        w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, "Error al crear el usuario en la base de datos\n Error: %v", err)
-        return
-    }
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error al crear el usuario en la base de datos\n Error: %v", err)
+		return
+	}
 
 	//Genero el token de usuario
 	token, err := generateToken(newUser.Name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-        fmt.Fprintf(w, "Error en la generacion del token de usuario\n Error: %v", err)
+		fmt.Fprintf(w, "Error en la generacion del token de usuario\n Error: %v", err)
 		return
 	}
 
 	//Creo un nuevo directorio para el usuario
 	err = newDirectory(newUser.Name)
 	w.Header().Set("Content-Type", "application/json")
-	if err!= nil {
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-        fmt.Fprintf(w, "Error en la creacion del directorio\n Error: %v", err)
+		fmt.Fprintf(w, "Error en la creacion del directorio\n Error: %v", err)
 		return
-    } else {
+	} else {
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(w, "{access_token: %v}\n", token)
 		return
@@ -159,26 +159,25 @@ func CreateUser (w http.ResponseWriter, r *http.Request) {
 func newDirectory(dir string) error {
 	ruta := filepath.Join(".", dir_usuarios, dir)
 	err := os.MkdirAll(ruta, 0755)
-	if err!= nil {
+	if err != nil {
 		return err
-    } else {
+	} else {
 		return nil
 	}
 }
 
 // Agrego el nuevo usuario a la base de datos
-func addUserdb (newUser models.User) error {
-	if  err := CargarUsuarios(); err != nil {
+func addUserdb(newUser models.User) error {
+	if err := CargarUsuarios(); err != nil {
 		return fmt.Errorf("Error al cargar la base de datos")
 	}
-	if newUser.Name == "" || newUser.Password == ""{
+	if newUser.Name == "" || newUser.Password == "" {
 		return fmt.Errorf("Usuario o contraseña vacío")
 	}
 	err1 := AddUser(newUser.Name, newUser.Password)
 	if err1 != nil {
 		return err1
-    } else {
+	} else {
 		return nil
 	}
 }
-	
