@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -13,18 +14,8 @@ import (
 	"SEGRED_API/models"
 )
 
-func handleToken(w http.ResponseWriter, r *http.Request) error {
-	err := validateToken(r.Header.Get("Authorization"))
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
-		return err
-	}
-	return nil
-}
-
 // Implementa GET /<string:username>/<string:doc_id>
-func GetFileContent(w http.ResponseWriter, r *http.Request) {
+func HandleFileOperations(w http.ResponseWriter, r *http.Request) {
 
 	if err := handleToken(w, r); err != nil {
 		return
@@ -32,13 +23,73 @@ func GetFileContent(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	username := vars["username"]
-
 	docID := vars["doc_id"]
+
 	if !strings.HasSuffix(docID, ".json") {
 		docID += ".json"
 	}
 
 	filePath := filepath.Join(".", dir_usuarios, username, docID)
+
+	switch r.Method {
+	case http.MethodGet:
+		getFileContent(w, filePath)
+	case http.MethodPost:
+		uploadFile(w, r, filePath)
+	case http.MethodPut:
+		updateFileContent(w, r, filePath)
+	case http.MethodDelete:
+		deleteFile(w, filePath)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintf(w, "método no permitido: %s", r.Method)
+	}
+
+}
+
+// POST /<string:username>/<string:doc_id> Crea un fichero json si no existe
+func uploadFile(w http.ResponseWriter, r *http.Request, filePath string) {
+	//Comprobar que el archivo existe
+	_, err := os.Stat(filePath)
+	if err == nil {
+		w.WriteHeader(http.StatusConflict)
+		fmt.Fprintf(w, "El archivo ya existe: %s", filePath)
+		return
+	} else if !os.IsNotExist(err) {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al verificar la existencia del archivo: %v", err)
+		return
+	}
+	// Subo el contenido en un nuevo archivo
+	fileContent, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error al leer el cuerpo de la solicitud: %v", err)
+		return
+	}
+	err = ioutil.WriteFile(filePath, fileContent, 0644)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al escribir en el archivo: %v", err)
+		return
+	}
+	//Devulevo el tamaño del archivo
+	fileStat, err := os.Stat(filePath)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al obtener el tamaño del archivo: %v", err)
+		return
+	}
+
+	response := fmt.Sprintf(`{"size: %d}`, fileStat.Size())
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprint(w, response)
+
+}
+
+//GET /<string:username>/<string:doc_id> Devuelve el contenido de un fichero json en una ruta
+func getFileContent(w http.ResponseWriter, filePath string) {
+
 	fileContent, err := ioutil.ReadFile(filePath)
 
 	if err != nil {
@@ -52,49 +103,78 @@ func GetFileContent(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Implementa PUT /<string:username>/<string:doc_id>
-func updateFileContent(w http.ResponseWriter, r *http.Request) {
-	err := validateToken(r.Header.Get("Authorization"))
+// DELETE /<string:username>/<string:doc_id> //Elimina un fichero json si existe
+func deleteFile(w http.ResponseWriter, filePath string) {
+	err := os.Remove(filePath)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
+		//Compruebo si el archivo existe
+		if os.IsNotExist(err) {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "El archivo no existe")
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "Error al borrar el archivo")
 		return
 	}
-	fmt.Fprintf(w, "Token validado con exito")
+	w.WriteHeader(http.StatusOK)
 }
 
-// Implementa DELETE /<string:username>/<string:doc_id>
-func deleteFile(w http.ResponseWriter, r *http.Request) {
-	err := validateToken(r.Header.Get("Authorization"))
+//PUT /<string:username>/<string:doc_id>
+func updateFileContent(w http.ResponseWriter, r *http.Request, filePath string) {
+	fileContent, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error al leer el cuerpo de la solicitud: %v", err)
 		return
 	}
-	fmt.Fprintf(w, "Token validado con exito")
-}
+	//Verificar si el archivo existe
+	_, err = os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// El archivo no existe, responder con 404 (Not Found)
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "El archivo no existe: %s", filePath)
+			return
+		}
 
-// Implementa POST /<string:username>/<string:doc_id>
-func uploadFile(w http.ResponseWriter, r *http.Request) {
-	err := validateToken(r.Header.Get("Authorization"))
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
+		// Otro tipo de error, manejar según sea necesario
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al verificar la existencia del archivo: %v", err)
 		return
 	}
-	fmt.Fprintf(w, "Token validado con exito")
+	//Sustituir el contenido del archivo
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al abrir el archivo: %v", err)
+		return
+	}
+	defer file.Close()
+
+	_, err = file.Write(fileContent)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al escribir en el archivo: %v", err)
+		return
+	}
+	// Devulevo el tamaño del archivo
+	fileStat, err := os.Stat(filePath)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al obtener el tamaño del archivo: %v", err)
+		return
+	}
+
+	response := fmt.Sprintf(`{"size: %d}`, fileStat.Size())
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprint(w, response)
 }
 
 // Implementa GET /<string:username>/_all_docs
-func getAllFiles(w http.ResponseWriter, r *http.Request) {
-	err := validateToken(r.Header.Get("Authorization"))
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
-		return
-	}
-	fmt.Fprintf(w, "Token validado con exito")
-}
+// func getAllFiles(w http.ResponseWriter, r *http.Request, userDir string) {
+
+// }
 
 //Comprueba si hay token y si es valido
 func validateToken(authHeader string) error {
@@ -102,7 +182,7 @@ func validateToken(authHeader string) error {
 	if authHeader == "" {
 		//w.WriteHeader(http.StatusUnauthorized)
 		//fmt.Fprintf(w, "Token de autorización ausente")
-		return fmt.Errorf("Token de autorizacion ausente")
+		return fmt.Errorf("token de autorizacion ausente")
 	}
 
 	claims := &models.Claims{}
@@ -115,15 +195,25 @@ func validateToken(authHeader string) error {
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			//w.WriteHeader(http.StatusUnauthorized)
-			return fmt.Errorf("No autorizado")
+			return fmt.Errorf("no autorizado")
 		}
 		//w.WriteHeader(http.StatusBadRequest)
-		return fmt.Errorf("Error en la solicitud")
+		return fmt.Errorf("error en la solicitud")
 	}
 
 	if !tkn.Valid {
 		//w.WriteHeader(http.StatusUnauthorized)
-		return fmt.Errorf("Token no válido")
+		return fmt.Errorf("token no válido")
+	}
+	return nil
+}
+
+func handleToken(w http.ResponseWriter, r *http.Request) error {
+	err := validateToken(r.Header.Get("Authorization"))
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
+		return err
 	}
 	return nil
 }
