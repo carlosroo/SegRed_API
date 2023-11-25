@@ -12,6 +12,12 @@ import (
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
+	err := handlers.InitializeDatabase()
+	if err != nil {
+		println("Error al inicializar la base de datos:", err)
+		return
+	}
+
 	router.HandleFunc("/", handlers.IndexRoute).Methods("GET")
 	router.HandleFunc("/version", handlers.GetVersion).Methods("GET")
 	router.HandleFunc("/signup", handlers.CreateUser).Methods("POST")

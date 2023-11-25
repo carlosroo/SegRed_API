@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -76,5 +77,20 @@ func AddUser(nombre, contraseña, salt string) error {
 		return err
 	}
 
+	return nil
+}
+
+//Crear fichero de base de datos si no existe
+func InitializeDatabase() error {
+
+	_, err := os.Stat(bbdd)
+	if os.IsNotExist(err) {
+		// El archivo no existe, crearlo
+		file, err := os.Create(bbdd)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+	}
 	return nil
 }

@@ -8,6 +8,9 @@
 # Archivos de logs
 *.log
 
+# Archivos de base de datos
+*.db
+
 # Directorios generados
 /bin/
 /vendor/
@@ -23,3 +26,4 @@
 
 #Directorios para ficheros de usuarios
 data/
+
