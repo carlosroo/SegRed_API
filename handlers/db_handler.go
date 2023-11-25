@@ -1,20 +1,21 @@
 package handlers
 
 import (
-
 	"encoding/json"
-	"io/ioutil"
 	"fmt"
-	
+	"io/ioutil"
+
 	"golang.org/x/crypto/bcrypt"
 
 	"SEGRED_API/models"
 )
+
 //Crea y devuelve el hash de una cadena
-func cifrarContraseña(password string) string{
+func cifrarContraseña(password string) string {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(hash)
 }
+
 //Vuelca los usuarios en la base de datos
 func GuardarUsuarios(db *models.UsersDB) error {
 	usuariosCifrados, err := json.Marshal(db.Users)
@@ -24,20 +25,25 @@ func GuardarUsuarios(db *models.UsersDB) error {
 
 	return ioutil.WriteFile(bbdd, usuariosCifrados, 0644)
 }
+
 //Crea una nueva estructura User dados sus parametros
 func NuevoUsuario(username, password string) models.User {
 	return models.User{
-		Name: username,
+		Name:     username,
 		Password: password,
 	}
 }
+
 //Carga los usuarios de la base de datos a usersDB.Users
-func CargarUsuarios() error{
+func CargarUsuarios() error {
+
 	fileContent, err := ioutil.ReadFile(bbdd)
 	if err != nil {
-		return err
+		return fmt.Errorf("error al leer la base de datos")
 	}
-
+	if len(fileContent) == 0 {
+		return nil
+	}
 	return json.Unmarshal(fileContent, &usersDB.Users)
 }
 
@@ -52,8 +58,8 @@ func AddUser(nombre, contraseña string) error {
 	newUser := NuevoUsuario(nombre, cifrarContraseña(contraseña))
 
 	usersDB.Users = append(usersDB.Users, newUser)
-	
-	if err:= GuardarUsuarios(&usersDB); err != nil {
+
+	if err := GuardarUsuarios(&usersDB); err != nil {
 		return err
 	}
 

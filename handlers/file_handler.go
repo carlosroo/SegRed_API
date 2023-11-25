@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -172,9 +173,57 @@ func updateFileContent(w http.ResponseWriter, r *http.Request, filePath string) 
 }
 
 // Implementa GET /<string:username>/_all_docs
-// func getAllFiles(w http.ResponseWriter, r *http.Request, userDir string) {
+func GetAllFiles(w http.ResponseWriter, r *http.Request) {
+	if err := handleToken(w, r); err != nil {
+		return
+	}
 
-// }
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	dirPath := filepath.Join(".", dir_usuarios, username)
+	//leo el directorio de usuario
+	userFiles, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al leer el directorio del usuario: %v", err)
+		return
+	}
+
+	userData := make(map[string]interface{})
+
+	for _, fileInfo := range userFiles {
+		if fileInfo.IsDir() {
+			continue
+		}
+		docID := strings.TrimSuffix(fileInfo.Name(), ".json")
+		filePath := filepath.Join(dirPath, fileInfo.Name())
+		fileContent, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error al leer el archivo %v del usuario: %v", fileInfo.Name(), err)
+			continue
+		}
+
+		var docContent interface{}
+		err = json.Unmarshal(fileContent, &docContent)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error al decodificar el archivo %v del usuario: %v", fileInfo.Name(), err)
+			continue
+		}
+		userData[docID] = docContent
+	}
+	response, err := json.Marshal(userData)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error al generar la respuesta JSON: %v", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}
 
 //Comprueba si hay token y si es valido
 func validateToken(authHeader string) error {
@@ -208,6 +257,7 @@ func validateToken(authHeader string) error {
 	return nil
 }
 
+//Valida el token y gestiona el error
 func handleToken(w http.ResponseWriter, r *http.Request) error {
 	err := validateToken(r.Header.Get("Authorization"))
 	if err != nil {

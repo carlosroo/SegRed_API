@@ -18,7 +18,6 @@ import (
 //funcion que implementa /login
 func Login(w http.ResponseWriter, r *http.Request) {
 	var user models.User
-	//expirationTime := time.Now().Add(time.Minute *5)
 
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -33,7 +32,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
 		return
 	}
-	err = identifyUser(&user)
+	err = identifyUser(&user, w)
 	if err != nil {
 		fmt.Fprintf(w, "Error en la autenticacion\n Error: %v", err)
 		return
@@ -58,17 +57,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // verificar contraseña de usuario
-func identifyUser(user *models.User) error {
+func identifyUser(user *models.User, w http.ResponseWriter) error {
 
 	if err := CargarUsuarios(); err != nil {
-		fmt.Println("Error al cargar la base de datos de usuarios:", err)
-		return err
+		w.WriteHeader(http.StatusInternalServerError)
+		return fmt.Errorf("error al leer la base de datos de usuarios: %v", err)
 	}
 	user_bbdd, err := searchUserByName(user.Name)
 	if err != nil {
-		return err
+		w.WriteHeader(http.StatusBadRequest)
+		return fmt.Errorf("usuario no encontrado: %v", user.Name)
 	}
 	if err := verifyPassword(user_bbdd, user.Password); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
@@ -169,10 +170,10 @@ func newDirectory(dir string) error {
 // Agrego el nuevo usuario a la base de datos
 func addUserdb(newUser models.User) error {
 	if err := CargarUsuarios(); err != nil {
-		return fmt.Errorf("Error al cargar la base de datos")
+		return fmt.Errorf("error al cargar la base de datos")
 	}
 	if newUser.Name == "" || newUser.Password == "" {
-		return fmt.Errorf("Usuario o contraseña vacío")
+		return fmt.Errorf("usuario o contraseña vacío")
 	}
 	err1 := AddUser(newUser.Name, newUser.Password)
 	if err1 != nil {
