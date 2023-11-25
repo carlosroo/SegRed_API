@@ -20,3 +20,9 @@
 
 #Carpeta de configuracion de vscode
 .vscode/
+
+#Directorios para ficheros de usuarios
+data/
+
+#Archivo base de datos de usuarios
+usuarios.db
