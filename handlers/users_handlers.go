@@ -92,6 +92,8 @@ func generateToken(name string) (string, error) {
 	return tokenString, err
 }
 
+//genera y devuelve un valor aleatorio para usarlo como salt
+
 //buscamos al usuario en la base de datos
 func searchUserByName(username string) (*models.User, error) {
 	for _, usuario := range usersDB.Users {
@@ -104,7 +106,8 @@ func searchUserByName(username string) (*models.User, error) {
 
 //comparamos el hash de la contraseña recibida con el guaradado
 func verifyPassword(user *models.User, password string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	combined := append([]byte(password), []byte(user.Salt)...)
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(combined))
 	return err
 }
 
@@ -125,6 +128,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error al decodificar el JSON\n Error: %v", err)
 		return
+	}
+	//Genero salt
+	newUser.Salt, err = generateSalt()
+	if err != nil {
+		w.WriteHeader((http.StatusInternalServerError))
+		fmt.Fprintf(w, "error creando el usuario: %v", err)
 	}
 	//Incluyo el nuevo usuario en la base de datos
 	err = addUserdb(newUser)
@@ -175,7 +184,7 @@ func addUserdb(newUser models.User) error {
 	if newUser.Name == "" || newUser.Password == "" {
 		return fmt.Errorf("usuario o contraseña vacío")
 	}
-	err1 := AddUser(newUser.Name, newUser.Password)
+	err1 := AddUser(newUser.Name, newUser.Password, newUser.Salt)
 	if err1 != nil {
 		return err1
 	} else {

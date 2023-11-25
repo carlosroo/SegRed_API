@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,9 +13,19 @@ import (
 )
 
 //Crea y devuelve el hash de una cadena
-func cifrarContraseña(password string) string {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func cifrarContraseña(password, salt string) string {
+	combined := append([]byte(password), []byte(salt)...)
+	hash, _ := bcrypt.GenerateFromPassword(combined, bcrypt.DefaultCost)
 	return string(hash)
+}
+
+func generateSalt() (string, error) {
+	saltBytes := make([]byte, 16)
+	_, err := rand.Read(saltBytes)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(saltBytes), nil
 }
 
 //Vuelca los usuarios en la base de datos
@@ -27,10 +39,11 @@ func GuardarUsuarios(db *models.UsersDB) error {
 }
 
 //Crea una nueva estructura User dados sus parametros
-func NuevoUsuario(username, password string) models.User {
+func NuevoUsuario(username, password, salt string) models.User {
 	return models.User{
 		Name:     username,
 		Password: password,
+		Salt:     salt,
 	}
 }
 
@@ -48,14 +61,14 @@ func CargarUsuarios() error {
 }
 
 //Añade usuario a la base de datos
-func AddUser(nombre, contraseña string) error {
+func AddUser(nombre, contraseña, salt string) error {
 	// Verifica si el usuario ya existe
 	for _, usuario := range usersDB.Users {
 		if usuario.Name == nombre {
 			return fmt.Errorf("el usuario %s ya existe", nombre)
 		}
 	}
-	newUser := NuevoUsuario(nombre, cifrarContraseña(contraseña))
+	newUser := NuevoUsuario(nombre, cifrarContraseña(contraseña, salt), salt)
 
 	usersDB.Users = append(usersDB.Users, newUser)
 
