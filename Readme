@@ -1,3 +1,23 @@
-Implementación de una API REST con mecanismos de autenticación e identificación de usuarios.
+Este proyecto trata sobre la implementación de una API RESTful sencilla que utiliza mecanismo de identificación y autrenticación de usuarios, además de usar mecanismo de confidencialidad usando HTTPS.
 
-Carlos Rodriguez Gómez-Carreño
+El programa servidor se lanza en https://myserver.local:5000 donde myserver.local resolverá a 127.0.0.1.
+
+Para poder usar https se ha generado un certificado auto-firmado que permite hacer las pruebas necesarias en un entorno local. Se puede generar el certificado con: 
+
+	openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+	
+que crea los archivos cert.pem y key.pem y para no tener que especificar la contraseña podemos desencriptar key.pem con:
+
+	openssl rsa -in key.pem -out key_unencrypted.pem
+	
+En la práctica estos archivos están definidos dentro del directorio y con los nombres indicados en los comandos, en caso de que cambies los nombres o el directorio deberás cambiar también la especificación de estos en el main.go
+
+Para el desarrollo de la API se han usado los siguientes módulos de go:
+	
+	github.com/gorilla/mux v1.8.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	golang.org/x/crypto v0.15.0 
+	
+Que están el archivo go.mod y se pueden descargar con el siguiente comando:
+	
+	go mod download 
