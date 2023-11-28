@@ -34,7 +34,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	err = identifyUser(&user, w)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en la autenticacion\n Error: %v", err)
 		return
 	}
@@ -54,7 +53,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{"acces_token": "%s"}`, token)
+	fmt.Fprintf(w, `{"access_token": "%s"}`, token)
 }
 
 // verificar contraseña de usuario

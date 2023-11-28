@@ -63,6 +63,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request, filePath string) {
 	}
 	// Subo el contenido en un nuevo archivo
 	fileContent, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error al leer el cuerpo de la solicitud: %v", err)
@@ -82,7 +83,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request, filePath string) {
 		return
 	}
 
-	response := fmt.Sprintf(`{"size: %d}`, fileStat.Size())
+	response := fmt.Sprintf(`{"size": "%d"}`, fileStat.Size())
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, response)
 
@@ -167,7 +168,7 @@ func updateFileContent(w http.ResponseWriter, r *http.Request, filePath string) 
 		return
 	}
 
-	response := fmt.Sprintf(`{"size: %d}`, fileStat.Size())
+	response := fmt.Sprintf(`{"size": "%d"}`, fileStat.Size())
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, response)
 }
@@ -259,7 +260,11 @@ func validateToken(authHeader string) error {
 
 //Valida el token y gestiona el error
 func handleToken(w http.ResponseWriter, r *http.Request) error {
-	err := validateToken(r.Header.Get("Authorization"))
+	headerAuth := r.Header.Get("Authorization")
+	headerSplit := strings.Fields(headerAuth)
+	token := headerSplit[1]
+
+	err := validateToken(token)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en el token\n Error: %v", err)
