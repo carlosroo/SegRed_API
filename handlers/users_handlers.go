@@ -34,10 +34,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	err = identifyUser(&user, w)
 	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Error en la autenticacion\n Error: %v", err)
 		return
 	}
-	token, err := generateToken(user.Name)
+	token, err := generateToken(user.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error en la genenacion del token: %v", err)
@@ -63,14 +64,14 @@ func identifyUser(user *models.User, w http.ResponseWriter) error {
 		w.WriteHeader(http.StatusInternalServerError)
 		return fmt.Errorf("error al leer la base de datos de usuarios: %v", err)
 	}
-	user_bbdd, err := searchUserByName(user.Name)
+	user_bbdd, err := searchUserByName(user.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return fmt.Errorf("usuario no encontrado: %v", user.Name)
+		return fmt.Errorf("usuario no encontrado: %v", user.Username)
 	}
 	if err := verifyPassword(user_bbdd, user.Password); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
+		w.WriteHeader(http.StatusUnauthorized)
+		return fmt.Errorf("contraseña incorrecta")
 	}
 
 	return nil
@@ -97,7 +98,7 @@ func generateToken(name string) (string, error) {
 //buscamos al usuario en la base de datos
 func searchUserByName(username string) (*models.User, error) {
 	for _, usuario := range usersDB.Users {
-		if usuario.Name == username {
+		if usuario.Username == username {
 			return &usuario, nil
 		}
 	}
@@ -144,7 +145,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Genero el token de usuario
-	token, err := generateToken(newUser.Name)
+	token, err := generateToken(newUser.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error en la generacion del token de usuario\n Error: %v", err)
@@ -152,7 +153,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Creo un nuevo directorio para el usuario
-	err = newDirectory(newUser.Name)
+	err = newDirectory(newUser.Username)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -181,10 +182,10 @@ func addUserdb(newUser models.User) error {
 	if err := CargarUsuarios(); err != nil {
 		return fmt.Errorf("error al cargar la base de datos")
 	}
-	if newUser.Name == "" || newUser.Password == "" {
+	if newUser.Username == "" || newUser.Password == "" {
 		return fmt.Errorf("usuario o contraseña vacío")
 	}
-	err1 := AddUser(newUser.Name, newUser.Password, newUser.Salt)
+	err1 := AddUser(newUser.Username, newUser.Password, newUser.Salt)
 	if err1 != nil {
 		return err1
 	} else {

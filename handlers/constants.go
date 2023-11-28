@@ -3,7 +3,7 @@ package handlers
 import "SEGRED_API/models"
 
 const (
-	version               = 0
+	version               = 1
 	dir_usuarios          = "data"
 	secret_key            = "secret_key"
 	token_expiration_time = 5

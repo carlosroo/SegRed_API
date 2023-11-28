@@ -42,7 +42,7 @@ func GuardarUsuarios(db *models.UsersDB) error {
 //Crea una nueva estructura User dados sus parametros
 func NuevoUsuario(username, password, salt string) models.User {
 	return models.User{
-		Name:     username,
+		Username: username,
 		Password: password,
 		Salt:     salt,
 	}
@@ -65,7 +65,7 @@ func CargarUsuarios() error {
 func AddUser(nombre, contraseña, salt string) error {
 	// Verifica si el usuario ya existe
 	for _, usuario := range usersDB.Users {
-		if usuario.Name == nombre {
+		if usuario.Username == nombre {
 			return fmt.Errorf("el usuario %s ya existe", nombre)
 		}
 	}
