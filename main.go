@@ -25,6 +25,9 @@ func main() {
 	router.HandleFunc("/{username}/_all_docs", handlers.GetAllFiles).Methods("GET")
 	router.HandleFunc("/{username}/{doc_id}", handlers.HandleFileOperations)
 
+	certFile := "cert.pem"
+	keyFile := "key_unencrypted.pem"
+
 	log.Println("Servidor corriendo en el puerto 5000")
-	log.Fatal(http.ListenAndServe("127.0.0.1:5000", router))
+	log.Fatal(http.ListenAndServeTLS(":5000", certFile, keyFile, router))
 }

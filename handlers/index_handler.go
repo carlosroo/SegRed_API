@@ -9,7 +9,7 @@ import (
 func GetVersion(w http.ResponseWriter, r *http.Request) { //manda un json
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf("Hello, version is %v", version)))
+	w.Write([]byte(fmt.Sprintf("%v", version)))
 }
 
 //Implementa GET /

@@ -27,3 +27,7 @@
 #Directorios para ficheros de usuarios
 data/
 
+#certificados SSL/TLS
+cert.pem
+key.pem
+key_unencrypted.pem

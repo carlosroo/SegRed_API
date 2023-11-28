@@ -54,7 +54,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{"acces_token:" "%s"}`, token)
+	fmt.Fprintf(w, `{"acces_token": "%s"}`, token)
 }
 
 // verificar contraseña de usuario
@@ -161,7 +161,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, "{access_token: %v}\n", token)
+		fmt.Fprintf(w, `{"access_token": "%v"}`, token)
 		return
 	}
 }
