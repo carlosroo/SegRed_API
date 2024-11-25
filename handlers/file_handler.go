@@ -15,7 +15,7 @@ import (
 	"SEGRED_API/models"
 )
 
-// Implementa GET /<string:username>/<string:doc_id>
+// GET /<string:username>/<string:doc_id>
 func HandleFileOperations(w http.ResponseWriter, r *http.Request) {
 
 	if err := handleToken(w, r); err != nil {
@@ -89,7 +89,7 @@ func uploadFile(w http.ResponseWriter, r *http.Request, filePath string) {
 
 }
 
-//GET /<string:username>/<string:doc_id> Devuelve el contenido de un fichero json en una ruta
+// GET /<string:username>/<string:doc_id> Devuelve el contenido de un fichero json en una ruta
 func getFileContent(w http.ResponseWriter, filePath string) {
 
 	fileContent, err := ioutil.ReadFile(filePath)
@@ -122,7 +122,7 @@ func deleteFile(w http.ResponseWriter, filePath string) {
 	w.WriteHeader(http.StatusOK)
 }
 
-//PUT /<string:username>/<string:doc_id>
+// PUT /<string:username>/<string:doc_id>
 func updateFileContent(w http.ResponseWriter, r *http.Request, filePath string) {
 	fileContent, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -226,7 +226,7 @@ func GetAllFiles(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-//Comprueba si hay token y si es valido
+// Comprueba si hay token y si es valido
 func validateToken(authHeader string) error {
 	//authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -258,7 +258,7 @@ func validateToken(authHeader string) error {
 	return nil
 }
 
-//Valida el token y gestiona el error
+// Valida el token y gestiona el error
 func handleToken(w http.ResponseWriter, r *http.Request) error {
 	headerAuth := r.Header.Get("Authorization")
 	headerSplit := strings.Fields(headerAuth)
