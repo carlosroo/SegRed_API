@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"golang.org/x/crypto/bcrypt"
@@ -51,7 +50,7 @@ func NuevoUsuario(username, password, salt string) models.User {
 // Carga los usuarios de la base de datos a usersDB.Users
 func CargarUsuarios() error {
 
-	fileContent, err := ioutil.ReadFile(bbdd)
+	fileContent, err := os.ReadFile(bbdd)
 	if err != nil {
 		return fmt.Errorf("error al leer la base de datos")
 	}
