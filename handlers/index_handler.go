@@ -5,14 +5,14 @@ import (
 	"net/http"
 )
 
-//Implementa GET /version
+// GET /version
 func GetVersion(w http.ResponseWriter, r *http.Request) { //manda un json
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(fmt.Sprintf("%v", version)))
 }
 
-//Implementa GET /
+// GET /
 func IndexRoute(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "Welcome!")
