@@ -5,6 +5,8 @@ El programa servidor se lanza en https://myserver.local:5000 donde myserver.loca
 Para poder usar https se ha generado un certificado auto-firmado que permite hacer las pruebas necesarias en un entorno local. Se puede generar el certificado con: 
 
 	openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+
+	// añadir pasos durante el comando (compañía y dominio)
 	
 que crea los archivos cert.pem y key.pem y para no tener que especificar la contraseña podemos desencriptar key.pem con:
 
@@ -21,3 +23,5 @@ Para el desarrollo de la API se han usado los siguientes módulos de go:
 Que están el archivo go.mod y se pueden descargar con el siguiente comando:
 	
 	go mod download 
+
+	//Añadir como ejecutar
