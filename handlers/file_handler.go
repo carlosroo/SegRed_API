@@ -173,7 +173,7 @@ func updateFileContent(w http.ResponseWriter, r *http.Request, filePath string) 
 	fmt.Fprint(w, response)
 }
 
-// Implementa GET /<string:username>/_all_docs
+// GET /<string:username>/_all_docs
 func GetAllFiles(w http.ResponseWriter, r *http.Request) {
 	if err := handleToken(w, r); err != nil {
 		return
@@ -226,7 +226,6 @@ func GetAllFiles(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-// Comprueba si hay token y si es valido
 func validateToken(authHeader string) error {
 	//authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -258,7 +257,6 @@ func validateToken(authHeader string) error {
 	return nil
 }
 
-// Valida el token y gestiona el error
 func handleToken(w http.ResponseWriter, r *http.Request) error {
 	headerAuth := r.Header.Get("Authorization")
 	headerSplit := strings.Fields(headerAuth)
