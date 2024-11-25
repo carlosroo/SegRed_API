@@ -13,7 +13,7 @@ import (
 	"SEGRED_API/models"
 )
 
-//Crea y devuelve el hash de una cadena
+// Crea y devuelve el hash de una cadena
 func cifrarContraseña(password, salt string) string {
 	combined := append([]byte(password), []byte(salt)...)
 	hash, _ := bcrypt.GenerateFromPassword(combined, bcrypt.DefaultCost)
@@ -29,17 +29,17 @@ func generateSalt() (string, error) {
 	return base64.StdEncoding.EncodeToString(saltBytes), nil
 }
 
-//Vuelca los usuarios en la base de datos
+// Vuelca los usuarios en la base de datos
 func GuardarUsuarios(db *models.UsersDB) error {
 	usuariosCifrados, err := json.Marshal(db.Users)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(bbdd, usuariosCifrados, 0644)
+	return os.WriteFile(bbdd, usuariosCifrados, 0644)
 }
 
-//Crea una nueva estructura User dados sus parametros
+// Crea una nueva estructura User dados sus parametros
 func NuevoUsuario(username, password, salt string) models.User {
 	return models.User{
 		Username: username,
@@ -48,7 +48,7 @@ func NuevoUsuario(username, password, salt string) models.User {
 	}
 }
 
-//Carga los usuarios de la base de datos a usersDB.Users
+// Carga los usuarios de la base de datos a usersDB.Users
 func CargarUsuarios() error {
 
 	fileContent, err := ioutil.ReadFile(bbdd)
@@ -61,7 +61,7 @@ func CargarUsuarios() error {
 	return json.Unmarshal(fileContent, &usersDB.Users)
 }
 
-//Añade usuario a la base de datos
+// Añade usuario a la base de datos
 func AddUser(nombre, contraseña, salt string) error {
 	// Verifica si el usuario ya existe
 	for _, usuario := range usersDB.Users {
@@ -80,7 +80,7 @@ func AddUser(nombre, contraseña, salt string) error {
 	return nil
 }
 
-//Crear fichero de base de datos si no existe
+// Crear fichero de base de datos si no existe
 func InitializeDatabase() error {
 
 	_, err := os.Stat(bbdd)
